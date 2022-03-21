@@ -42,6 +42,7 @@ const Home = ({ user, logout }) => {
       }
     });
 
+
     setConversations(newState);
   };
 
@@ -92,16 +93,18 @@ const Home = ({ user, logout }) => {
     [setConversations, conversations]
   );
 
-  const addMessageToConversation = useCallback(
-    (data) => {
+  const  addMessageToConversation = useCallback(
+    async (data) =>  {
       // if sender isn't null, that means the message needs to be put in a brand new convo
-      const { message, sender = null } = data;
+      const { message, sender = null } = await data;
+      //console.log(data)
       if (sender !== null) {
         const newConvo = {
           id: message.conversationId,
           otherUser: sender,
           messages: [message],
         };
+        //console.log(message)
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
       }
@@ -191,7 +194,7 @@ const Home = ({ user, logout }) => {
     if (!user.isFetching) {
       fetchConversations();
     }
-  }, [user, conversations]);
+  }, [user]);
 
   const handleLogout = async () => {
     if (user && user.id) {
