@@ -42,7 +42,6 @@ const Home = ({ user, logout }) => {
       }
     });
 
-
     setConversations(newState);
   };
 
@@ -63,9 +62,9 @@ const Home = ({ user, logout }) => {
     });
   };
 
-  const postMessage = (body) => {
+  const postMessage = async (body) => {
     try {
-      const data = saveMessage(body);
+      const data = await saveMessage(body);
 
       if (!body.conversationId) {
         addNewConvo(body.recipientId, data.message);
@@ -80,44 +79,55 @@ const Home = ({ user, logout }) => {
   };
 
   const addNewConvo = useCallback(
-    (recipientId, message) => {
-      conversations.forEach((convo) => {
-        if (convo.otherUser.id === recipientId) {
-          convo.messages.push(message);
-          convo.latestMessageText = message.text;
-          convo.id = message.conversationId;
-        }
-      });
-      setConversations(conversations);
+    async (recipientId, message) => {
+    
+        //uses prev messages data to add new conversation without mutation (allows for instant rerender)
+        setConversations((prev) => {
+            let updatedConversations = [...prev];
+            updatedConversations.forEach((convo) => {
+                if (convo.otherUser.id === recipientId) {
+                convo.messages.push(message);
+                convo.latestMessageText = message.text;
+                convo.id = message.conversationId;
+                }
+
+            });
+            return updatedConversations
+        })
     },
-    [setConversations, conversations]
+    [setConversations]
   );
 
   const  addMessageToConversation = useCallback(
     async (data) =>  {
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = await data;
-      //console.log(data)
+      //pretty sure this is unreachable code?
       if (sender !== null) {
         const newConvo = {
           id: message.conversationId,
           otherUser: sender,
           messages: [message],
         };
-        //console.log(message)
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
       }
+      
+      //uses prev data to add new messages without mutation (allows for instant rerender)
+      setConversations((prev)=> {
+          let updatedConversations = [...prev];
 
-      conversations.forEach((convo) => {
-        if (convo.id === message.conversationId) {
-          convo.messages.unshift(message);
-          convo.latestMessageText = message.text;
-        }
+          updatedConversations.forEach((convo) => {
+          if (convo.id === message.conversationId) {
+            convo.messages.push(message);
+            convo.latestMessageText = message.text;
+          }
+        });
+
+        return updatedConversations
       });
-      setConversations(conversations);
     },
-    [setConversations, conversations]
+    [setConversations]
   );
 
   const setActiveChat = (username) => {
