@@ -191,7 +191,7 @@ const Home = ({ user, logout }) => {
     if (!user.isFetching) {
       fetchConversations();
     }
-  }, [user]);
+  }, [user, conversations]);
 
   const handleLogout = async () => {
     if (user && user.id) {
