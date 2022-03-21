@@ -99,9 +99,9 @@ const Home = ({ user, logout }) => {
   );
 
   const  addMessageToConversation = useCallback(
-    async (data) =>  {
+     (data) =>  {
       // if sender isn't null, that means the message needs to be put in a brand new convo
-      const { message, sender = null } = await data;
+      const { message, sender = null } =  data;
       //pretty sure this is unreachable code?
       if (sender !== null) {
         const newConvo = {
