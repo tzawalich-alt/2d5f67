@@ -6,40 +6,40 @@ const onlineUsers = require("../../onlineUsers");
 // get all conversations for a user, include latest message text for preview, and all messages
 // include other user model so we have info on username/profile pic (don't include current user info)
 router.get("/", async (req, res, next) => {
-    try {
-        if (!req.user) {
-            return res.sendStatus(401);
-        }
-        const userId = req.user.id;
-        const conversations = await Conversation.findAll({
-            where: {
-                [Op.or]: {
-                    user1Id: userId,
-                    user2Id: userId,
-                },
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const userId = req.user.id;
+    const conversations = await Conversation.findAll({
+      where: {
+        [Op.or]: {
+          user1Id: userId,
+          user2Id: userId,
+        },
+      },
+      attributes: ["id", "user1LastAccess", "user2LastAccess"],
+      order: [[Message, "createdAt", "ASC"]],
+      include: [
+        { model: Message, order: ["createdAt", "ASC"] },
+        {
+          model: User,
+          as: "user1",
+          where: {
+            id: {
+              [Op.not]: userId,
             },
-            attributes: ["id"],
-            order: [[Message, "createdAt", "ASC"]],
-            include: [
-                { model: Message, order: ["createdAt", "ASC"] },
-                {
-                    model: User,
-                    as: "user1",
-                    where: {
-                        id: {
-                            [Op.not]: userId,
-                        },
-                    },
-                    attributes: ["id", "username", "photoUrl"],
-                    required: false,
+          },
+          attributes: ["id", "username", "photoUrl"],
+          required: false,
+        },
+        {
+          model: User,
+          as: "user2",
+          where: {
+            id: {
+              [Op.not]: userId,
                 },
-                {
-                    model: User,
-                    as: "user2",
-                    where: {
-                        id: {
-                            [Op.not]: userId,
-                        },
                     },
                     attributes: ["id", "username", "photoUrl"],
                     required: false,
@@ -51,14 +51,17 @@ router.get("/", async (req, res, next) => {
             const convo = conversations[i];
             const convoJSON = convo.toJSON();
 
-            // set a property "otherUser" so that frontend will have easier access
-            if (convoJSON.user1) {
-                convoJSON.otherUser = convoJSON.user1;
-                delete convoJSON.user1;
-            } else if (convoJSON.user2) {
-                convoJSON.otherUser = convoJSON.user2;
-                delete convoJSON.user2;
-            }
+      // set a property "otherUser" so that frontend will have easier access
+      // for notification count, set correct user last access (set opposite to otherUser i.e. the person logged in)
+      if (convoJSON.user1) {
+        convoJSON.otherUser = convoJSON.user1;
+        convoJSON.lastAccess = convoJSON.user2LastAccess
+        delete convoJSON.user1;
+      } else if (convoJSON.user2) {
+        convoJSON.otherUser = convoJSON.user2;
+        convoJSON.lastAccess = convoJSON.user1LastAccess
+        delete convoJSON.user2;
+      }
 
             // set property for online status of the other user
             if (onlineUsers.includes(convoJSON.otherUser.id)) {

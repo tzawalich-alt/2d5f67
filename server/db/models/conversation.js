@@ -1,8 +1,17 @@
-const { Op } = require("sequelize");
+const { Op, DataTypes } = require("sequelize");
 const db = require("../db");
 const Message = require("./message");
 
-const Conversation = db.define("conversation", {});
+const Conversation = db.define("conversation", {
+    user1LastAccess:{
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    user2LastAccess:{
+        type: DataTypes.STRING,
+        allowNull: false
+    }
+});
 
 // find conversation given two user Ids
 
@@ -23,3 +32,9 @@ Conversation.findConversation = async function (user1Id, user2Id) {
 };
 
 module.exports = Conversation;
+
+
+// Conversation.update(
+//     {title: req.body.title},
+//     {where: req.params.bookId}
+//   )

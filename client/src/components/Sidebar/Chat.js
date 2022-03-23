@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@material-ui/core';
-import { BadgeAvatar, ChatContent } from '../Sidebar';
+import { BadgeAvatar, ChatContent, NewMessage } from '../Sidebar';
 import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles((theme) => ({
@@ -18,24 +18,30 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Chat = ({ conversation, setActiveChat }) => {
-  const classes = useStyles();
-  const { otherUser } = conversation;
+    const classes = useStyles();
+    const { otherUser } = conversation;
 
-  const handleClick = async (conversation) => {
-    await setActiveChat(conversation.otherUser.username);
-  };
+    const handleClick = async (conversation) => {
+        await setActiveChat(conversation.otherUser.username);
+    };
 
-  return (
-    <Box onClick={() => handleClick(conversation)} className={classes.root}>
-      <BadgeAvatar
-        photoUrl={otherUser.photoUrl}
-        username={otherUser.username}
-        online={otherUser.online}
-        sidebar={true}
-      />
-      <ChatContent conversation={conversation} />
-    </Box>
-  );
+        console.log(conversation, "Chat.js conversation")
+        //const newCount = 5;
+        //example usage
+        const newCount = conversation.messages.filter(message => (message.senderId === conversation.otherUser.id && message.new === true)).length;
+
+    return (
+        <Box onClick={() => handleClick(conversation)} className={classes.root}>
+        <BadgeAvatar
+            photoUrl={otherUser.photoUrl}
+            username={otherUser.username}
+            online={otherUser.online}
+            sidebar={true}
+        />
+        <ChatContent conversation={conversation} />
+        <NewMessage newCount={newCount}/>
+        </Box>
+    );
 };
 
 export default Chat;
