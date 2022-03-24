@@ -39,14 +39,18 @@ const ActiveChat = ({
   };
 
     //sets most recent access marker when loading and leaving an active chat
+
   useEffect(()=>{
         // console.log("ActiveChat!")
         // updateConvoAccess(conversation)
     return() =>{
         console.log("ActiveChat! takedown")
-        updateConvoAccess(conversation)
+        if(conversation && conversation !== {}){
+            updateConvoAccess(conversation)
+        }
     }
   }, [conversation])
+
 
   return (
     <Box className={classes.root}>
