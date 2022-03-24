@@ -129,6 +129,30 @@ const Home = ({ user, logout }) => {
         [setConversations]
     );
 
+    const updateConvoAccess = async (body) => {
+        const {data} = await axios.post('/api/conversations', body);
+    
+        console.log(body, "body")
+        console.log(data.nowTime, "nowTime")
+        
+        //update convo last access time for rerender
+        setConversations((prev)=> {
+            let updatedConversations = [...prev];
+    
+            updatedConversations.forEach((convo) => {
+            if (convo.id === body.id) {
+                if(body.user1LastAccess){
+                    convo.user1LastAccess = data.nowTime
+                }else{
+                    convo.user2LastAccess = data.nowTime
+                }
+            }
+          });
+    
+          return updatedConversations
+        });
+      }
+
     const setActiveChat = (username) => {
         setActiveConversation(username);
     };
@@ -211,27 +235,28 @@ const Home = ({ user, logout }) => {
         }
     };
 
-    return (
-        <>
-            <Button onClick={handleLogout}>Logout</Button>
-            <Grid container component="main" className={classes.root}>
-                <CssBaseline />
-                <SidebarContainer
-                    conversations={conversations}
-                    user={user}
-                    clearSearchedUsers={clearSearchedUsers}
-                    addSearchedUsers={addSearchedUsers}
-                    setActiveChat={setActiveChat}
-                />
-                <ActiveChat
-                    activeConversation={activeConversation}
-                    conversations={conversations}
-                    user={user}
-                    postMessage={postMessage}
-                />
-            </Grid>
-        </>
-    );
+  return (
+    <>
+      <Button onClick={handleLogout}>Logout</Button>
+      <Grid container component="main" className={classes.root}>
+        <CssBaseline />
+        <SidebarContainer
+          conversations={conversations}
+          user={user}
+          clearSearchedUsers={clearSearchedUsers}
+          addSearchedUsers={addSearchedUsers}
+          setActiveChat={setActiveChat}
+        />
+        <ActiveChat
+          activeConversation={activeConversation}
+          conversations={conversations}
+          user={user}
+          postMessage={postMessage}
+          updateConvoAccess={updateConvoAccess}
+        />
+      </Grid>
+    </>
+  );
 };
 
 export default Home;

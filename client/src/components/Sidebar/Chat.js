@@ -21,14 +21,20 @@ const Chat = ({ conversation, setActiveChat }) => {
     const classes = useStyles();
     const { otherUser } = conversation;
 
+    const newCount = conversation.messages.filter(message => 
+        (
+            message.senderId === conversation.otherUser.id 
+                && 
+            message.new === true
+        )).length;
+
     const handleClick = async (conversation) => {
         await setActiveChat(conversation.otherUser.username);
     };
 
-        console.log(conversation, "Chat.js conversation")
-        //const newCount = 5;
-        //example usage
-        const newCount = conversation.messages.filter(message => (message.senderId === conversation.otherUser.id && message.new === true)).length;
+    console.log(conversation, "Chat.js conversation")
+    //const newCount = 5;
+    //example usage
 
     return (
         <Box onClick={() => handleClick(conversation)} className={classes.root}>

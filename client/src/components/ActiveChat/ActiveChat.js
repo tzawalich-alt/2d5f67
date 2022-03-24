@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box } from '@material-ui/core';
 import { Input, Header, Messages } from './index';
@@ -24,6 +24,7 @@ const ActiveChat = ({
   conversations,
   activeConversation,
   postMessage,
+  updateConvoAccess
 }) => {
   const classes = useStyles();
 
@@ -36,6 +37,16 @@ const ActiveChat = ({
   const isConversation = (obj) => {
     return obj !== {} && obj !== undefined;
   };
+
+    //sets most recent access marker when loading and leaving an active chat
+  useEffect(()=>{
+        // console.log("ActiveChat!")
+        // updateConvoAccess(conversation)
+    return() =>{
+        console.log("ActiveChat! takedown")
+        updateConvoAccess(conversation)
+    }
+  }, [conversation])
 
   return (
     <Box className={classes.root}>

@@ -51,17 +51,17 @@ router.get("/", async (req, res, next) => {
             const convo = conversations[i];
             const convoJSON = convo.toJSON();
 
-      // set a property "otherUser" so that frontend will have easier access
-      // for notification count, set correct user last access (set opposite to otherUser i.e. the person logged in)
-      if (convoJSON.user1) {
-        convoJSON.otherUser = convoJSON.user1;
-        convoJSON.lastAccess = convoJSON.user2LastAccess
-        delete convoJSON.user1;
-      } else if (convoJSON.user2) {
-        convoJSON.otherUser = convoJSON.user2;
-        convoJSON.lastAccess = convoJSON.user1LastAccess
-        delete convoJSON.user2;
-      }
+            // set a property "otherUser" so that frontend will have easier access
+            // for notification count, set correct user last access (delete same user as otherUser i.e. keep the person logged in)
+            if (convoJSON.user1) {
+                convoJSON.otherUser = convoJSON.user1;
+                delete convoJSON.user1LastAccess
+                delete convoJSON.user1;
+            } else if (convoJSON.user2) {
+                convoJSON.otherUser = convoJSON.user2;
+                delete convoJSON.user2LastAccess;
+                delete convoJSON.user2;
+            }
 
             // set property for online status of the other user
             if (onlineUsers.includes(convoJSON.otherUser.id)) {
@@ -76,6 +76,50 @@ router.get("/", async (req, res, next) => {
         }
 
         res.json(conversations);
+    } catch (error) {
+        next(error);
+    }
+});
+
+//checks which userAccess to update, updates it, and returns conversation
+router.post("/", async (req, res, next) => {
+    try {
+        if (!req.user) {
+            return res.sendStatus(401);
+        }
+        const userId = req.user.id;
+        const otherUserId = req.body.otherUser.id
+        console.log(userId, otherUserId)
+
+        const nowTime = Date.now()
+
+        if (req.body.user1LastAccess) {
+            const conversation = await Conversation.update(
+                { user1LastAccess: nowTime },
+                {
+                    where:{
+                        user1Id: {[Op.or]: [userId, otherUserId]},
+                        user2Id: { [Op.or]: [otherUserId, userId]}
+                    }
+                }
+            );
+            res.json({conversation, nowTime});
+        } else {
+            const conversation = await Conversation.update(
+                { user2LastAccess: nowTime },
+                {
+                    // where: {[Op.and]:[
+                    //     {user1Id: {[Op.or]: [userId, otherUserId]}},
+                    //     {user2Id: { [Op.or]: [otherUserId, userId]}}
+                    // ]}
+                    where:{
+                        user1Id: {[Op.or]: [userId, otherUserId]},
+                        user2Id: { [Op.or]: [otherUserId, userId]}
+                    }
+                }
+            );
+            res.json({conversation, nowTime});
+        }
     } catch (error) {
         next(error);
     }
