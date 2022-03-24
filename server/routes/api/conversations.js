@@ -21,7 +21,7 @@ router.get("/", async (req, res, next) => {
             attributes: ["id"],
             order: [[Message, "createdAt", "DESC"]],
             include: [
-                { model: Message, order: ["createdAt", "DESC"] },
+                { model: Message, order: ["createdAt", "ASC"] },
                 {
                     model: User,
                     as: "user1",
@@ -66,9 +66,6 @@ router.get("/", async (req, res, next) => {
             } else {
                 convoJSON.otherUser.online = false;
             }
-
-            //reserve message array for proper ordering of messages.
-            convoJSON.messages.reverse();
 
             // set properties for notification count and latest message preview
             convoJSON.latestMessageText = convoJSON.messages[0].text;
