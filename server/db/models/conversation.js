@@ -4,11 +4,11 @@ const Message = require("./message");
 
 const Conversation = db.define("conversation", {
     user1LastAccess:{
-        type: DataTypes.STRING,
+        type: DataTypes.BIGINT,
         allowNull: false
     },
     user2LastAccess:{
-        type: DataTypes.STRING,
+        type: DataTypes.BIGINT,
         allowNull: false
     }
 });
