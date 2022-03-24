@@ -17,23 +17,25 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const Chat = ({ conversation, setActiveChat }) => {
+const Chat = ({ conversation, setActiveChat, activeConversation }) => {
     const classes = useStyles();
     const { otherUser } = conversation;
 
     //counts new messages by checking if the message createdAt timestamp is newer than the last visit to the conversation
-    const newCount = conversation.messages.filter(message =>
-    (
-        message.senderId === conversation.otherUser.id
-        &&
-        (Date.parse(message.createdAt) > (+conversation.user1LastAccess || +conversation.user2LastAccess))
-    )).length;
+    const newCount = conversation.otherUser.username !== activeConversation ?
+        conversation.messages.filter(message => (
+            message.senderId === conversation.otherUser.id
+            &&
+            (Date.parse(message.createdAt) > (+conversation.user1LastAccess || +conversation.user2LastAccess))
+        )).length 
+        : 0;
 
     const handleClick = async (conversation) => {
         await setActiveChat(conversation.otherUser.username);
     };
 
     console.log(conversation, "Chat.js conversation")
+
 
     return (
         <Box onClick={() => handleClick(conversation)} className={classes.root}>
@@ -44,7 +46,8 @@ const Chat = ({ conversation, setActiveChat }) => {
                 sidebar={true}
             />
             <ChatContent conversation={conversation} />
-            {newCount > 0 && <NewMessage newCount={newCount} />}
+            {newCount > 0 && <NewMessage newCount={newCount} />
+            }
         </Box>
     );
 };
