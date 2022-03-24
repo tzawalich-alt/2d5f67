@@ -79,7 +79,7 @@ const Home = ({ user, logout }) => {
   };
 
   const addNewConvo = useCallback(
-    async (recipientId, message) => {
+    (recipientId, message) => {
     
         //uses prev messages data to add new conversation without mutation (allows for instant rerender)
         setConversations((prev) => {
