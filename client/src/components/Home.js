@@ -63,7 +63,6 @@ const Home = ({ user, logout }) => {
     };
 
     const postMessage = async (body) => {
-        console.log(body, "body home 66")
         try {
             const data = await saveMessage(body);
 
@@ -105,7 +104,6 @@ const Home = ({ user, logout }) => {
             const { message, sender = null } = data;
             //pretty sure this is unreachable code?
             if (sender !== null) {
-                console.log("unreachable?")
                 const newConvo = {
                     id: message.conversationId,
                     otherUser: sender,
@@ -120,7 +118,6 @@ const Home = ({ user, logout }) => {
                             const convoCopy = { ...convo }
                             convoCopy.messages = [...convoCopy.messages, message];
                             convoCopy.latestMessageText = message.text;
-                            console.log(convoCopy, "convoCopy")
                             return convoCopy
                         } else {
                             return convo

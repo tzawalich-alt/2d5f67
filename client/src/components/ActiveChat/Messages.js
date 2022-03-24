@@ -6,8 +6,6 @@ import moment from 'moment';
 const Messages = (props) => {
   const { messages, otherUser, userId } = props;
 
-  console.log(props, "messages props")
-
   return (
     <Box>
       {messages.map((message) => {
