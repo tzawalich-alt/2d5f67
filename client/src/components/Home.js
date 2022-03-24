@@ -63,6 +63,7 @@ const Home = ({ user, logout }) => {
     };
 
     const postMessage = async (body) => {
+        console.log(body, "body home 66")
         try {
             const data = await saveMessage(body);
 
@@ -81,34 +82,19 @@ const Home = ({ user, logout }) => {
     const addNewConvo = useCallback(
         (recipientId, message) => {
 
-            // setConversations((prev) => {
-            //     let updatedConversations = [...prev];
-            //     console.log(updatedConversations, "updatedconvo")
-            //     updatedConversations.forEach((convo) => {
-            //         console.log(updatedConversations, "convo")
-            //         if (convo.otherUser.id === recipientId) {
-            //         convo.messages.push(message);
-            //         convo.latestMessageText = message.text;
-            //         convo.id = message.conversationId;
-            //         }
-
-            //     });
-            //     return updatedConversations
-            // })
-            setConversations((prev) => {
-                const convoCopy = prev.map((convo) => {
+            setConversations((prev) =>
+                prev.map((convo) => {
                     if (convo.otherUser.id === recipientId) {
-                        const copyMessages = { ...convo }
-                        copyMessages.messages.push(message);
-                        copyMessages.latestMessageText = message.text;
-                        copyMessages.id = message.conversationId;
-                        return copyMessages
+                        const convoCopy = { ...convo }
+                        convoCopy.messages = [...convoCopy.messages, message];
+                        convoCopy.latestMessageText = message.text;
+                        convoCopy.id = message.conversationId;
+                        return convoCopy
                     } else {
                         return convo
                     }
-                });
-                return convoCopy
-            })
+                })
+            )
         },
         [setConversations]
     );
@@ -119,6 +105,7 @@ const Home = ({ user, logout }) => {
             const { message, sender = null } = data;
             //pretty sure this is unreachable code?
             if (sender !== null) {
+                console.log("unreachable?")
                 const newConvo = {
                     id: message.conversationId,
                     otherUser: sender,
@@ -126,35 +113,21 @@ const Home = ({ user, logout }) => {
                 };
                 newConvo.latestMessageText = message.text;
                 setConversations((prev) => [newConvo, ...prev]);
+            }else{
+                setConversations((prev) => 
+                    prev.map((convo) => {
+                        if (convo.id === message.conversationId) {
+                            const convoCopy = { ...convo }
+                            convoCopy.messages = [...convoCopy.messages, message];
+                            convoCopy.latestMessageText = message.text;
+                            console.log(convoCopy, "convoCopy")
+                            return convoCopy
+                        } else {
+                            return convo
+                        }
+                    })
+                )
             }
-
-            // setConversations((prev) => {
-            //     let updatedConversations = [...prev];
-            //     console.log(updatedConversations, "updatedconvo")
-            //     updatedConversations.forEach((convo) => {
-            //         console.log(convo, "convo")
-            //         if (convo.id === message.conversationId) {
-            //             convo.messages.push(message);
-            //             convo.latestMessageText = message.text;
-            //         }
-            //     });
-
-            //     return updatedConversations
-            // });
-
-            setConversations((prev) => {
-                const convoCopy = prev.map((convo) => {
-                    if (convo.id === message.conversationId) {
-                        const copyMessages = { ...convo }
-                        copyMessages.messages.push(message);
-                        copyMessages.latestMessageText = message.text;
-                        return copyMessages
-                    } else {
-                        return convo
-                    }
-                });
-                return convoCopy
-            })
         },
         [setConversations]
     );
