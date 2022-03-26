@@ -70,7 +70,17 @@ router.get("/", async (req, res, next) => {
                 convoJSON.otherUser.online = false;
             }
 
-            // set properties for notification count and latest message preview
+            // set properties for notification count
+
+            convoJSON.newMessageCount = convoJSON.otherUser.username !== convoJSON.id ?
+                convoJSON.messages.filter(message => (
+                    message.senderId === convoJSON.otherUser.id
+                    &&
+                    (Date.parse(message.createdAt) > (+convoJSON.user1LastAccess || +convoJSON.user2LastAccess))
+                )).length 
+                : 0;
+            
+            //latest message preview
             convoJSON.latestMessageText = convoJSON.messages[0].text;
             conversations[i] = convoJSON;
         }
@@ -89,8 +99,6 @@ router.post("/", async (req, res, next) => {
         }
         const userId = req.user.id;
         const otherUserId = req.body.otherUser.id
-        console.log(userId, otherUserId)
-
         const nowTime = Date.now()
 
         if (req.body.user1LastAccess) {
@@ -108,10 +116,6 @@ router.post("/", async (req, res, next) => {
             const conversation = await Conversation.update(
                 { user2LastAccess: nowTime },
                 {
-                    // where: {[Op.and]:[
-                    //     {user1Id: {[Op.or]: [userId, otherUserId]}},
-                    //     {user2Id: { [Op.or]: [otherUserId, userId]}}
-                    // ]}
                     where:{
                         user1Id: {[Op.or]: [userId, otherUserId]},
                         user2Id: { [Op.or]: [otherUserId, userId]}

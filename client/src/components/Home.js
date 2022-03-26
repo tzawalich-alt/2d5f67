@@ -22,6 +22,8 @@ const Home = ({ user, logout }) => {
     const [conversations, setConversations] = useState([]);
     const [activeConversation, setActiveConversation] = useState(null);
 
+    console.log(conversations, "conversations")
+
     const classes = useStyles();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -55,6 +57,7 @@ const Home = ({ user, logout }) => {
     };
 
     const sendMessage = (data, body) => {
+        console.log(body, "sendmsg")
         socket.emit('new-message', {
             message: data.message,
             recipientId: body.recipientId,
@@ -65,11 +68,12 @@ const Home = ({ user, logout }) => {
     const postMessage = async (body) => {
         try {
             const data = await saveMessage(body);
-
+            console.log(data, "data")
+            console.log(body, "body")
             if (!body.conversationId) {
                 addNewConvo(body.recipientId, data.message);
             } else {
-                addMessageToConversation(data);
+                addMessageToConversation(data, body);
             }
 
             sendMessage(data, body);
@@ -80,7 +84,7 @@ const Home = ({ user, logout }) => {
 
     const addNewConvo = useCallback(
         (recipientId, message) => {
-
+            console.log(recipientId, message, "addnewconvo")
             setConversations((prev) =>
                 prev.map((convo) => {
                     if (convo.otherUser.id === recipientId) {
@@ -88,6 +92,7 @@ const Home = ({ user, logout }) => {
                         convoCopy.messages = [...convoCopy.messages, message];
                         convoCopy.latestMessageText = message.text;
                         convoCopy.id = message.conversationId;
+                        console.log(convo, "convo")
                         return convoCopy
                     } else {
                         return convo
@@ -101,17 +106,24 @@ const Home = ({ user, logout }) => {
     const addMessageToConversation = useCallback(
         (data) => {
             // if sender isn't null, that means the message needs to be put in a brand new convo
-            const { message, sender = null } = data;
-            //pretty sure this is unreachable code?
+            //probably an issue for new messages check here if it doesn't work later
+            const { message, recipientId, sender = null } = data;
+            console.log(data, "addtonew data")
             if (sender !== null) {
+                console.log("in here?")
                 const newConvo = {
                     id: message.conversationId,
                     otherUser: sender,
                     messages: [message],
+                    newMessageCount: 1
                 };
                 newConvo.latestMessageText = message.text;
-                setConversations((prev) => [newConvo, ...prev]);
+                // this if statement stops new convos from being shown to everyone
+                // not the best socket.io user management, but works to stop a bug during testing
+                console.log(recipientId, user.id, "user recip")
+                if(recipientId === user.id){ setConversations((prev) => [newConvo, ...prev]); }
             }else{
+                console.log(data, "add message else")
                 setConversations((prev) => 
                     prev.map((convo) => {
                         if (convo.id === message.conversationId) {
@@ -126,7 +138,7 @@ const Home = ({ user, logout }) => {
                 )
             }
         },
-        [setConversations]
+        [setConversations, user.id]
     );
 
     const updateConvoAccess = async (body) => {
@@ -136,21 +148,21 @@ const Home = ({ user, logout }) => {
         console.log(data.nowTime, "nowTime")
         
         //update convo last access time for rerender
-        setConversations((prev)=> {
-            let updatedConversations = [...prev];
+        // setConversations((prev)=> {
+        //     let updatedConversations = [...prev];
     
-            updatedConversations.forEach((convo) => {
-            if (convo.id === body.id) {
-                if(body.user1LastAccess){
-                    convo.user1LastAccess = data.nowTime
-                }else{
-                    convo.user2LastAccess = data.nowTime
-                }
-            }
-          });
+        //     updatedConversations.forEach((convo) => {
+        //     if (convo.id === body.id) {
+        //         if(body.user1LastAccess){
+        //             convo.user1LastAccess = data.nowTime
+        //         }else{
+        //             convo.user2LastAccess = data.nowTime
+        //         }
+        //     }
+        //   });
     
-          return updatedConversations
-        });
+        //   return updatedConversations
+        // });
       }
 
     const setActiveChat = (username) => {

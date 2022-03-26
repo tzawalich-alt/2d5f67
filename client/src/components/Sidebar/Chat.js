@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Box } from '@material-ui/core';
 import { BadgeAvatar, ChatContent, NewMessage } from '../Sidebar';
 import { makeStyles } from '@material-ui/core/styles';
@@ -17,24 +17,44 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const Chat = ({ conversation, setActiveChat, activeConversation }) => {
+const Chat = ({ conversation, setActiveChat, activeConversation, user}) => {
+    const [newMessageCount, setNewMessageCount] = useState(null)
+    const [lastConvoLength, setLastConvoLength] = useState(null)
     const classes = useStyles();
     const { otherUser } = conversation;
 
-    //counts new messages by checking if the message createdAt timestamp is newer than the last visit to the conversation
-    const newCount = conversation.otherUser.username !== activeConversation ?
-        conversation.messages.filter(message => (
-            message.senderId === conversation.otherUser.id
-            &&
-            (Date.parse(message.createdAt) > (+conversation.user1LastAccess || +conversation.user2LastAccess))
-        )).length 
-        : 0;
-
+    //make non async seems to remove an extra render cycle on chat onclick
     const handleClick = async (conversation) => {
         await setActiveChat(conversation.otherUser.username);
     };
 
+    if(lastConvoLength === null){ setLastConvoLength(conversation.messages.length)}
+
+    //new message logic center for non-fetched messages
+    useEffect(() =>{
+        console.log(newMessageCount, "newmsg count")
+
+        if(conversation.otherUser.username !== activeConversation){
+            console.log(conversation.otherUser.username,  activeConversation, "active convo")
+            if(newMessageCount === null){ 
+                setNewMessageCount(conversation.newMessageCount)
+             }else if(conversation.messages.length > lastConvoLength && user.id !== conversation.messages[conversation.messages.length - 1].senderId){
+                console.log(conversation.messages.length, lastConvoLength , "new message +1")
+                setLastConvoLength(conversation.messages.length)
+                setNewMessageCount((prev) =>{ return prev + 1})
+             }
+        }else{
+            console.log(conversation.otherUser.username,  activeConversation, "active convo")
+            setLastConvoLength(conversation.messages.length)
+            setNewMessageCount(0)
+        }
+        // conversation.otherUser.username !== activeConversation ? 
+        // (newMessageCount !== null ? setNewMessageCount((prev) => prev++) : setNewMessageCount(conversation.newMessageCount)) : 
+        // setNewMessageCount(0);
+    }, [conversation, activeConversation, user.id])
+
     console.log(conversation, "Chat.js conversation")
+    console.log(newMessageCount, "newmsg count 2")
 
 
     return (
@@ -46,8 +66,7 @@ const Chat = ({ conversation, setActiveChat, activeConversation }) => {
                 sidebar={true}
             />
             <ChatContent conversation={conversation} />
-            {newCount > 0 && <NewMessage newCount={newCount} />
-            }
+            {newMessageCount > 0 && <NewMessage newCount={newMessageCount} />}
         </Box>
     );
 };
