@@ -6,19 +6,15 @@ import { Box, Typography } from "@material-ui/core";
 
     const useStyles = makeStyles(() => ({
         root: {
-            borderRadius: 16,
-            padding: 10,
+            borderRadius: "15px",
+            padding: "5px 10px",
             display: 'flex',
             alignItems: 'center',
-            backgroundColor: "blue",
-            '&:hover': {
-            cursor: 'grab',
-            },
+            backgroundColor: "#3F92FF",
         },
         newCount: {
-            fontSize: 20,
+            fontSize: '10px',
             letterSpacing: -0.29,
-            fontWeight: 'bold',
             color: "#fff",
         }
     }));
