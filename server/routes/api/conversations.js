@@ -71,6 +71,7 @@ router.get("/", async (req, res, next) => {
             }
 
             // set properties for notification count
+            //count all new messages sent by other user that are newer than last login.
 
             convoJSON.newMessageCount = convoJSON.otherUser.username !== convoJSON.id ?
                 convoJSON.messages.filter(message => (
@@ -81,7 +82,7 @@ router.get("/", async (req, res, next) => {
                 : 0;
             
             //latest message preview
-            convoJSON.latestMessageText = convoJSON.messages[0].text;
+            convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length - 1].text;
             conversations[i] = convoJSON;
         }
 

@@ -30,6 +30,7 @@ router.post("/", async (req, res, next) => {
         user1LastAccess: Date.now(),
         user2LastAccess: Date.now()
       });
+      //Sort out/delete correct userAccess
       if (onlineUsers.includes(sender.id)) {
         sender.online = true;
       }
