@@ -44,7 +44,8 @@ const ActiveChat = ({
         if(conversation && conversation !== {}){
             updateConvoAccess(conversation)
         }
-  }, [conversation])
+        console.log("yo")
+  }, [conversation, updateConvoAccess])
 
 
   return (

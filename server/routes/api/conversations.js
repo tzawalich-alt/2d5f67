@@ -96,6 +96,11 @@ router.put("/read", async (req, res, next) => {
         if (!req.user) {
             return res.sendStatus(401);
         }
+
+        //if conversation isn't created yet, return
+        if(!req.body.id){
+            return
+        }
         const userId = req.user.id;
         const otherUserId = req.body.otherUser.id
         const nowTime = Date.now()
