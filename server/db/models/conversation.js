@@ -5,11 +5,13 @@ const Message = require("./message");
 const Conversation = db.define("conversation", {
     user1LastAccess:{
         type: DataTypes.BIGINT,
-        allowNull: false
+        allowNull: false,
+        defaultValue: Date.now()
     },
     user2LastAccess:{
         type: DataTypes.BIGINT,
-        allowNull: false
+        allowNull: false,
+        defaultValue: Date.now()
     }
 });
 
@@ -31,10 +33,21 @@ Conversation.findConversation = async function (user1Id, user2Id) {
   return conversation;
 };
 
+//check to make sure user is in the convo before updating
+Conversation.isUserInConversation = async function (userId, convoId) {
+    const conversation = await Conversation.findOne({
+      where: {
+          [Op.and]:[{
+            id: convoId
+          },{[Op.or]:[
+              {user1Id: userId},
+              {user2Id: userId}
+          ]}
+        ]
+      }
+    });
+    // return conversation or null if it doesn't exist
+    return conversation;
+  };
+
 module.exports = Conversation;
-
-
-// Conversation.update(
-//     {title: req.body.title},
-//     {where: req.params.bookId}
-//   )

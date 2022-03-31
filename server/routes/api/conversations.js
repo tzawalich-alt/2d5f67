@@ -73,13 +73,11 @@ router.get("/", async (req, res, next) => {
             // set properties for notification count
             //count all new messages sent by other user that are newer than last login.
 
-            convoJSON.newMessageCount = convoJSON.otherUser.username !== convoJSON.id ?
-                convoJSON.messages.filter(message => (
+            convoJSON.newMessageCount = convoJSON.messages.filter(message => (
                     message.senderId === convoJSON.otherUser.id
                     &&
                     (Date.parse(message.createdAt) > (+convoJSON.user1LastAccess || +convoJSON.user2LastAccess))
-                )).length 
-                : 0;
+                )).length;
             
             //latest message preview
             convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length - 1].text;
@@ -93,7 +91,7 @@ router.get("/", async (req, res, next) => {
 });
 
 //checks which userAccess to update, updates it, and returns conversation
-router.post("/", async (req, res, next) => {
+router.put("/read", async (req, res, next) => {
     try {
         if (!req.user) {
             return res.sendStatus(401);
@@ -101,6 +99,16 @@ router.post("/", async (req, res, next) => {
         const userId = req.user.id;
         const otherUserId = req.body.otherUser.id
         const nowTime = Date.now()
+
+        //check to make sure user is in the convo before updating
+        const isUserInConvo = await Conversation.isUserInConversation(
+            req.user.id, req.body.id
+        );
+        
+        if(!isUserInConvo){
+            return res.sendStatus(403)
+        }
+
 
         if (req.body.user1LastAccess) {
             const conversation = await Conversation.update(

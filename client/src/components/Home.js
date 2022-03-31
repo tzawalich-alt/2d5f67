@@ -133,7 +133,8 @@ const Home = ({ user, logout }) => {
     );
 
     const updateConvoAccess = async (body) => {
-        await axios.post('/api/conversations', body);
+        console.log(body)
+        await axios.put('/api/conversations/read', body);
       }
 
     const setActiveChat = (username) => {
