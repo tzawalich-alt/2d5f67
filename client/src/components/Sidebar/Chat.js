@@ -57,7 +57,7 @@ const Chat = ({ conversation, setActiveChat, activeConversation, user}) => {
                 sidebar={true}
             />
             
-            <ChatContent conversation={conversation} />
+            <ChatContent conversation={conversation} newMessage={newMessageCount}/>
             <Badge badgeContent={newMessageCount} color="primary" className={classes.newMessage} max={999}/>
         </Box>
     );
