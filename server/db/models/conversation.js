@@ -2,39 +2,12 @@ const { Op, DataTypes } = require("sequelize");
 const db = require("../db");
 const Message = require("./message");
 
+//convoName could be used to name the chatroom and create a title, if wanted
 const Conversation = db.define("conversation", {
-    user1LastAccess:{
-        type: DataTypes.BIGINT,
-        allowNull: false
-    },
-    user2LastAccess:{
-        type: DataTypes.BIGINT,
-        allowNull: false
+    convoName:{
+        type: DataTypes.string,
+        allowNull: true
     }
 });
 
-// find conversation given two user Ids
-
-Conversation.findConversation = async function (user1Id, user2Id) {
-  const conversation = await Conversation.findOne({
-    where: {
-      user1Id: {
-        [Op.or]: [user1Id, user2Id]
-      },
-      user2Id: {
-        [Op.or]: [user1Id, user2Id]
-      }
-    }
-  });
-
-  // return conversation or null if it doesn't exist
-  return conversation;
-};
-
 module.exports = Conversation;
-
-
-// Conversation.update(
-//     {title: req.body.title},
-//     {where: req.params.bookId}
-//   )
