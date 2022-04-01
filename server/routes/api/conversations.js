@@ -51,17 +51,34 @@ router.get("/", async (req, res, next) => {
             const convo = conversations[i];
             const convoJSON = convo.toJSON();
 
+
             // set a property "otherUser" so that frontend will have easier access
             // for notification count, set correct user last access (delete same user as otherUser i.e. keep the person logged in)
             if (convoJSON.user1) {
                 convoJSON.otherUser = convoJSON.user1;
+                convoJSON.otherUserLastAccess = convoJSON.user1LastAccess;
                 delete convoJSON.user1LastAccess
                 delete convoJSON.user1;
             } else if (convoJSON.user2) {
                 convoJSON.otherUser = convoJSON.user2;
+                convoJSON.otherUserLastAccess = convoJSON.user2LastAccess;
                 delete convoJSON.user2LastAccess;
                 delete convoJSON.user2;
             }
+      
+
+            const myMessages = convoJSON.messages.filter(message => message.senderId !== convoJSON.otherUser.id)
+
+            const lastSeenIndex = myMessages.findIndex(message => Date.parse(message.createdAt) > convoJSON.otherUserLastAccess)
+
+            if (lastSeenIndex !== -1) {
+                  convoJSON.otherUserLastSeenMessageId = myMessages[lastSeenIndex - 1].id
+                } else {
+                  myMessages.length === 0 ?
+                  convoJSON.otherUserLastSeenMessageId = null :
+                  convoJSON.otherUserLastSeenMessageId = myMessages[myMessages.length - 1].id
+                }
+
 
             // set property for online status of the other user
             if (onlineUsers.includes(convoJSON.otherUser.id)) {

@@ -88,6 +88,8 @@ const Home = ({ user, logout }) => {
                         convoCopy.id = message.conversationId;
                         convoCopy.newMessageCount = 0;
                         convoCopy.user1LastAccess = Date.now();
+                        convoCopy.otherUserLastAccess = Date.now();
+                        convoCopy.otherUserLastSeenMessageId = null;
                         return convoCopy
                     } else {
                         return convo
@@ -108,7 +110,9 @@ const Home = ({ user, logout }) => {
                     otherUser: sender,
                     messages: [message],
                     newMessageCount: 1,
-                    user2LastAccess: Date.now()
+                    user2LastAccess: Date.now(),
+                    otherUserLastAccess: Date.now(),
+                    otherUserLastSeenMessageId : null
                 };
                 newConvo.latestMessageText = message.text;
                 // this if statement stops new convos from being shown to everyone
@@ -132,8 +136,36 @@ const Home = ({ user, logout }) => {
         [setConversations, user.id]
     );
 
+    const updateReadMessageStatus = useCallback( (data) =>{
+        const { seenId, recipient, convoId } = data;
+        if (recipient.id === user.id){
+            setConversations((prev) => 
+                    prev.map((convo) => {
+                        if (convo.id === convoId) {
+                            const convoCopy = { ...convo }
+                            convoCopy.otherUserLastSeenMessageId = seenId;
+                            return convoCopy
+                        } else {
+                            return convo
+                        }
+                    })
+                )
+        }
+    }, [user.id])
+
+    const sendReadStatus = (seenId, recipient, convoId) => {
+        socket.emit('read-message', {
+            seenId: seenId,
+            recipient: recipient,
+            convoId: convoId
+        });
+    };
+
+    const updateReadMessage = async (body) => {
+      sendReadStatus(body.seenId, body.recipient, body.id)
+    }
+
     const updateConvoAccess = async (body) => {
-        console.log(body)
         await axios.put('/api/conversations/read', body);
       }
 
@@ -176,6 +208,7 @@ const Home = ({ user, logout }) => {
         socket.on('add-online-user', addOnlineUser);
         socket.on('remove-offline-user', removeOfflineUser);
         socket.on('new-message', addMessageToConversation);
+        socket.on('read-message', updateReadMessageStatus);
 
         return () => {
             // before the component is destroyed
@@ -183,8 +216,9 @@ const Home = ({ user, logout }) => {
             socket.off('add-online-user', addOnlineUser);
             socket.off('remove-offline-user', removeOfflineUser);
             socket.off('new-message', addMessageToConversation);
+            socket.off('read-message', updateReadMessageStatus);
         };
-    }, [addMessageToConversation, addOnlineUser, removeOfflineUser, socket]);
+    }, [addMessageToConversation, addOnlineUser, removeOfflineUser, updateReadMessageStatus, socket]);
 
     useEffect(() => {
         // when fetching, prevent redirect
@@ -238,6 +272,7 @@ const Home = ({ user, logout }) => {
           user={user}
           postMessage={postMessage}
           updateConvoAccess={updateConvoAccess}
+          updateReadMessage={updateReadMessage}
         />
       </Grid>
     </>

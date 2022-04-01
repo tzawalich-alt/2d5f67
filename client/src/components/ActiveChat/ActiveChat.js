@@ -24,27 +24,28 @@ const ActiveChat = ({
   conversations,
   activeConversation,
   postMessage,
-  updateConvoAccess
+  updateConvoAccess,
+  updateReadMessage
 }) => {
   const classes = useStyles();
 
 
-  const conversation = conversations
+  const conversation = useMemo(() => conversations
     ? conversations.find(
-        (conversation) => conversation.otherUser.username === activeConversation
-      )
-    : {};
+      (conversation) => conversation.otherUser.username === activeConversation
+    )
+    : {}
+    , [activeConversation, conversations])
 
   const isConversation = (obj) => {
     return obj !== {} && obj !== undefined;
   };
 
   //sets most recent access marker when loading an active chat
-  useEffect(()=>{
-        if(conversation && conversation !== {}){
-            updateConvoAccess(conversation)
-        }
-        console.log("yo")
+  useEffect(() => {
+    if (conversation && conversation !== {}) {
+      updateConvoAccess(conversation);
+    }
   }, [conversation, updateConvoAccess])
 
 
@@ -63,6 +64,9 @@ const ActiveChat = ({
                   messages={conversation.messages}
                   otherUser={conversation.otherUser}
                   userId={user.id}
+                  otherUserLastSeenMessageId={conversation.otherUserLastSeenMessageId}
+                  updateReadMessage={updateReadMessage}
+                  convoId={conversation.id}
                 />
                 <Input
                   otherUser={conversation.otherUser}
