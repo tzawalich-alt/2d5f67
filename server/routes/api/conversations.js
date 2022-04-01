@@ -72,6 +72,8 @@ router.get("/", async (req, res, next) => {
             const lastSeenIndex = myMessages.findIndex(message => Date.parse(message.createdAt) > convoJSON.otherUserLastAccess)
 
             if (lastSeenIndex !== -1) {
+                  lastSeenIndex === 0 ?
+                  convoJSON.otherUserLastSeenMessageId = null :
                   convoJSON.otherUserLastSeenMessageId = myMessages[lastSeenIndex - 1].id
                 } else {
                   myMessages.length === 0 ?
