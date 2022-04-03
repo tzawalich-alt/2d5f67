@@ -65,11 +65,10 @@ const Home = ({ user, logout }) => {
     const postMessage = async (body) => {
         try {
             const data = await saveMessage(body);
-
             if (!body.conversationId) {
                 addNewConvo(body.recipientId, data.message);
             } else {
-                addMessageToConversation(data);
+                addMessageToConversation(data, body);
             }
 
             sendMessage(data, body);
@@ -80,7 +79,6 @@ const Home = ({ user, logout }) => {
 
     const addNewConvo = useCallback(
         (recipientId, message) => {
-
             setConversations((prev) =>
                 prev.map((convo) => {
                     if (convo.otherUser.id === recipientId) {
@@ -88,6 +86,10 @@ const Home = ({ user, logout }) => {
                         convoCopy.messages = [...convoCopy.messages, message];
                         convoCopy.latestMessageText = message.text;
                         convoCopy.id = message.conversationId;
+                        convoCopy.newMessageCount = 0;
+                        convoCopy.user1LastAccess = Date.now();
+                        convoCopy.otherUserLastAccess = Date.now();
+                        convoCopy.otherUserLastSeenMessageId = null;
                         return convoCopy
                     } else {
                         return convo
@@ -101,16 +103,21 @@ const Home = ({ user, logout }) => {
     const addMessageToConversation = useCallback(
         (data) => {
             // if sender isn't null, that means the message needs to be put in a brand new convo
-            const { message, sender = null } = data;
-            //pretty sure this is unreachable code?
+            const { message, recipientId, sender = null } = data;
             if (sender !== null) {
                 const newConvo = {
                     id: message.conversationId,
                     otherUser: sender,
                     messages: [message],
+                    newMessageCount: 1,
+                    user2LastAccess: Date.now(),
+                    otherUserLastAccess: Date.now(),
+                    otherUserLastSeenMessageId : null
                 };
                 newConvo.latestMessageText = message.text;
-                setConversations((prev) => [newConvo, ...prev]);
+                // this if statement stops new convos from being shown to everyone
+                // not the best socket.io user management, but works to stop a bug during testing
+                if(recipientId === user.id){ setConversations((prev) => [newConvo, ...prev]); }
             }else{
                 setConversations((prev) => 
                     prev.map((convo) => {
@@ -126,8 +133,41 @@ const Home = ({ user, logout }) => {
                 )
             }
         },
-        [setConversations]
+        [setConversations, user.id]
     );
+
+    const updateReadMessageStatus = useCallback( (data) =>{
+        const { seenId, recipient, convoId } = data;
+        if (recipient.id === user.id){
+            setConversations((prev) => 
+                    prev.map((convo) => {
+                        if (convo.id === convoId) {
+                            const convoCopy = { ...convo }
+                            convoCopy.otherUserLastSeenMessageId = seenId;
+                            return convoCopy
+                        } else {
+                            return convo
+                        }
+                    })
+                )
+        }
+    }, [user.id])
+
+    const sendReadStatus = (seenId, recipient, convoId) => {
+        socket.emit('read-message', {
+            seenId: seenId,
+            recipient: recipient,
+            convoId: convoId
+        });
+    };
+
+    const updateReadMessage = async (body) => {
+      sendReadStatus(body.seenId, body.recipient, body.id)
+    }
+
+    const updateConvoAccess = async (body) => {
+        await axios.put('/api/conversations/read', body);
+      }
 
     const setActiveChat = (username) => {
         setActiveConversation(username);
@@ -168,6 +208,7 @@ const Home = ({ user, logout }) => {
         socket.on('add-online-user', addOnlineUser);
         socket.on('remove-offline-user', removeOfflineUser);
         socket.on('new-message', addMessageToConversation);
+        socket.on('read-message', updateReadMessageStatus);
 
         return () => {
             // before the component is destroyed
@@ -175,8 +216,9 @@ const Home = ({ user, logout }) => {
             socket.off('add-online-user', addOnlineUser);
             socket.off('remove-offline-user', removeOfflineUser);
             socket.off('new-message', addMessageToConversation);
+            socket.off('read-message', updateReadMessageStatus);
         };
-    }, [addMessageToConversation, addOnlineUser, removeOfflineUser, socket]);
+    }, [addMessageToConversation, addOnlineUser, removeOfflineUser, updateReadMessageStatus, socket]);
 
     useEffect(() => {
         // when fetching, prevent redirect
@@ -211,27 +253,30 @@ const Home = ({ user, logout }) => {
         }
     };
 
-    return (
-        <>
-            <Button onClick={handleLogout}>Logout</Button>
-            <Grid container component="main" className={classes.root}>
-                <CssBaseline />
-                <SidebarContainer
-                    conversations={conversations}
-                    user={user}
-                    clearSearchedUsers={clearSearchedUsers}
-                    addSearchedUsers={addSearchedUsers}
-                    setActiveChat={setActiveChat}
-                />
-                <ActiveChat
-                    activeConversation={activeConversation}
-                    conversations={conversations}
-                    user={user}
-                    postMessage={postMessage}
-                />
-            </Grid>
-        </>
-    );
+  return (
+    <>
+      <Button onClick={handleLogout}>Logout</Button>
+      <Grid container component="main" className={classes.root}>
+        <CssBaseline />
+        <SidebarContainer
+          conversations={conversations}
+          user={user}
+          clearSearchedUsers={clearSearchedUsers}
+          addSearchedUsers={addSearchedUsers}
+          setActiveChat={setActiveChat}
+          activeConversation={activeConversation}
+        />
+        <ActiveChat
+          activeConversation={activeConversation}
+          conversations={conversations}
+          user={user}
+          postMessage={postMessage}
+          updateConvoAccess={updateConvoAccess}
+          updateReadMessage={updateReadMessage}
+        />
+      </Grid>
+    </>
+  );
 };
 
 export default Home;

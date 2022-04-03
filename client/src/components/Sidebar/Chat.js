@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box } from '@material-ui/core';
+import React, { useEffect, useState } from 'react';
+import { Box, Badge } from '@material-ui/core';
 import { BadgeAvatar, ChatContent } from '../Sidebar';
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -15,15 +15,38 @@ const useStyles = makeStyles((theme) => ({
       cursor: 'grab',
     },
   },
+  newMessage: {
+    right: "20px"
+  }
 }));
 
-const Chat = ({ conversation, setActiveChat }) => {
+const Chat = ({ conversation, setActiveChat, activeConversation, user }) => {
+  const [newMessageCount, setNewMessageCount] = useState(null)
+  const [lastConvoLength, setLastConvoLength] = useState(null)
   const classes = useStyles();
   const { otherUser } = conversation;
 
+  //make non async seems to remove an extra render cycle on chat onclick
   const handleClick = async (conversation) => {
     await setActiveChat(conversation.otherUser.username);
   };
+
+  if (lastConvoLength === null) { setLastConvoLength(conversation.messages.length) }
+  if (newMessageCount === null) { setNewMessageCount(conversation.newMessageCount) }
+
+  //new message logic center for non-fetched messages
+  useEffect(() => {
+    if (conversation.otherUser.username !== activeConversation) {
+      if (conversation.messages.length > lastConvoLength && user.id !== conversation.messages[conversation.messages.length - 1].senderId) {
+        setLastConvoLength(conversation.messages.length)
+        setNewMessageCount((prev) => { return prev + 1 })
+      }
+    } else {
+      setLastConvoLength(conversation.messages.length)
+      setNewMessageCount(0)
+    }
+  }, [conversation, activeConversation, user.id, lastConvoLength])
+
 
   return (
     <Box onClick={() => handleClick(conversation)} className={classes.root}>
@@ -33,7 +56,9 @@ const Chat = ({ conversation, setActiveChat }) => {
         online={otherUser.online}
         sidebar={true}
       />
-      <ChatContent conversation={conversation} />
+
+      <ChatContent conversation={conversation} newMessage={newMessageCount} />
+      <Badge badgeContent={newMessageCount} color="primary" className={classes.newMessage} max={999} />
     </Box>
   );
 };
